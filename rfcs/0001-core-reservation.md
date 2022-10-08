@@ -174,8 +174,8 @@ BEGIN
     NOTIFY reservation_update;
     RETURN NULL;
 END;
-END
 $$ LANGUAGE plpgsql;
+
 CREATE TRIGGER reservations_trigger
     AFTER INSERT OR UPDATE OR DELETE ON rsvp.reservations
     FOR EACH ROW EXECUTE PROCEDURE rsvp.reservations_trigger();

@@ -74,8 +74,7 @@ allow = [
     "Apache-2.0",
     "Apache-2.0 WITH LLVM-exception",
     "BSD-3-Clause",
-    "MPL-2.0",
-    "ISC",
+    "Unicode-DFS-2016",
 ]
 # List of explicitly disallowed licenses
 # See https://spdx.org/licenses/ for list of possible licenses

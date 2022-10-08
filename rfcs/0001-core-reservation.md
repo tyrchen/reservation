@@ -213,8 +213,9 @@ N/A
 
 ## Unresolved questions
 
+- how to handle repeated reservation? - is this more ore less a business logic which shouldn't be put into this layer? (non-goal: we consider this is a business logic and should be handled by the caller)
 - if load is big, we may use an external queue for recording changes.
-- we haven't considered observability/deployment yet.
+- we haven't considered tracking/observability/deployment yet.
 - query performance might be an issue - need to revisit the index and also consider using cache.
 
 ## Future possibilities

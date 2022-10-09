@@ -28,13 +28,13 @@ repos:
         language: rust
         files: \.rs$
         args: []
-      - id: cargo-deny
-        name: cargo deny check
-        description: Check cargo dependencies
-        entry: bash -c 'cargo deny check'
-        language: rust
-        files: \.rs$
-        args: []
+      # - id: cargo-deny
+      #   name: cargo deny check
+      #   description: Check cargo dependencies
+      #   entry: bash -c 'cargo deny check'
+      #   language: rust
+      #   files: \.rs$
+      #   args: []
       - id: cargo-check
         name: cargo check
         description: Check the package for errors.

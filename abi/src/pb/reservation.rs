@@ -84,9 +84,9 @@ pub struct GetResponse {
     #[prost(message, optional, tag = "1")]
     pub reservation: ::core::option::Option<Reservation>,
 }
-/// To query reservations, send a QueryRequest
+/// query reservations with user id, resource id, start time, end time, and status
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct QueryRequest {
+pub struct ReservationQuery {
     /// resource id for the reservation query. If empty, query all resources
     #[prost(string, tag = "1")]
     pub resource_id: ::prost::alloc::string::String,
@@ -96,12 +96,18 @@ pub struct QueryRequest {
     /// use status to filter result. If UNKNOWN, return all reservations
     #[prost(enumeration = "ReservationStatus", tag = "3")]
     pub status: i32,
-    /// start time for the reservation query, if 0, use Infinty for start time
+    /// start time for the reservation query, if 0, use Infinity for start time
     #[prost(message, optional, tag = "4")]
     pub start: ::core::option::Option<::prost_types::Timestamp>,
-    /// end time for the reservation query, if 0, use Infinty for end time
+    /// end time for the reservation query, if 0, use Infinity for end time
     #[prost(message, optional, tag = "5")]
     pub end: ::core::option::Option<::prost_types::Timestamp>,
+}
+/// To query reservations, send a QueryRequest
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct QueryRequest {
+    #[prost(message, optional, tag = "1")]
+    pub query: ::core::option::Option<ReservationQuery>,
 }
 /// Client can listen to reservation updates by sending a ListenRequest
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -117,7 +123,9 @@ pub struct ListenResponse {
     pub reservation: ::core::option::Option<Reservation>,
 }
 /// reservation status for a given time period
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+#[derive(
+    sqlx::Type, Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration,
+)]
 #[repr(i32)]
 pub enum ReservationStatus {
     Unknown = 0,

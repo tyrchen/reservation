@@ -6,4 +6,8 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+abi = { version = "0.1.0", path = "../abi" }
+async-trait = "0.1.57"
+chrono = { version = "0.4.22", features = ["serde"] }
 sqlx = { version = "0.6.2", features = ["runtime-tokio-rustls", "postgres", "chrono", "uuid"] }
+thiserror = "1.0.37"

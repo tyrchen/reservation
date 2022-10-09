@@ -1,12 +1,9 @@
+mod error;
 mod pb;
+mod types;
+mod utils;
 
-use chrono::{DateTime, NaiveDateTime, Utc};
+pub use error::Error;
 pub use pb::*;
-use prost_types::Timestamp;
 
-pub fn convert_to_utc_time(ts: Timestamp) -> DateTime<Utc> {
-    DateTime::<Utc>::from_utc(
-        NaiveDateTime::from_timestamp(ts.seconds, ts.nanos as _),
-        Utc,
-    )
-}
+pub use utils::*;

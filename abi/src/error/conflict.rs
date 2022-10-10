@@ -4,19 +4,19 @@ use chrono::{DateTime, Utc};
 use regex::Regex;
 use std::{collections::HashMap, convert::Infallible, str::FromStr};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ReservationConflictInfo {
     Parsed(ReservationConflict),
     Unparsed(String),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ReservationConflict {
     pub new: ReservationWindow,
     pub old: ReservationWindow,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ReservationWindow {
     pub rid: String,
     pub start: DateTime<Utc>,
@@ -116,6 +116,7 @@ mod tests {
         let dt = parse_datetime("2022-12-26 22:00:00+00").unwrap();
         assert_eq!(dt.to_rfc3339(), "2022-12-26T22:00:00+00:00");
     }
+
     #[test]
     fn parsed_info_should_work() {
         let info: ParsedInfo = ERR_MSG.parse().unwrap();

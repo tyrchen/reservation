@@ -19,7 +19,7 @@ pub enum Error {
     NotFound,
 
     #[error("Invalid reservation id: {0}")]
-    InvalidReservationId(String),
+    InvalidReservationId(i64),
 
     #[error("Invalid user id: {0}")]
     InvalidUserId(String),

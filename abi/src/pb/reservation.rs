@@ -3,8 +3,8 @@
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Reservation {
     /// unique id for the reservation, if put into ReservationRequest, id should be empty
-    #[prost(string, tag = "1")]
-    pub id: ::prost::alloc::string::String,
+    #[prost(int64, tag = "1")]
+    pub id: i64,
     /// user id for the reservation
     #[prost(string, tag = "2")]
     pub user_id: ::prost::alloc::string::String,

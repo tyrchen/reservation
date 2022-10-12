@@ -1,8 +1,8 @@
-use crate::{ReservationId, ReservationManager, Rsvp};
-use abi::Validator;
+use crate::{ReservationManager, Rsvp};
+use abi::{ReservationId, Validator};
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
-use sqlx::{postgres::types::PgRange, types::Uuid, PgPool, Row};
+use sqlx::{postgres::types::PgRange, PgPool, Row};
 
 #[async_trait]
 impl Rsvp for ReservationManager {
@@ -16,7 +16,7 @@ impl Rsvp for ReservationManager {
 
         // generate a insert sql for the reservation
         // execute the sql
-        let id: Uuid = sqlx::query(
+        let id = sqlx::query(
             "INSERT INTO rsvp.reservations (user_id, resource_id, timespan, note, status) VALUES ($1, $2, $3, $4, $5::rsvp.reservation_status) RETURNING id"
         )
         .bind(rsvp.user_id.clone())
@@ -27,14 +27,14 @@ impl Rsvp for ReservationManager {
         .fetch_one(&self.pool)
         .await?.get(0);
 
-        rsvp.id = id.to_string();
+        rsvp.id = id;
 
         Ok(rsvp)
     }
 
     async fn change_status(&self, id: ReservationId) -> Result<abi::Reservation, abi::Error> {
         // if current status is pending, change it to confirmed, otherwise do nothing
-        let id = Uuid::parse_str(&id).map_err(|_| abi::Error::InvalidReservationId(id.clone()))?;
+        id.validate()?;
         let rsvp: abi::Reservation = sqlx::query_as(
             "UPDATE rsvp.reservations SET status = 'confirmed' WHERE id = $1 AND status = 'pending' RETURNING *"
         ).bind(id).fetch_one(&self.pool).await?;
@@ -48,7 +48,7 @@ impl Rsvp for ReservationManager {
         note: String,
     ) -> Result<abi::Reservation, abi::Error> {
         // update the note of the reservation
-        let id = Uuid::parse_str(&id).map_err(|_| abi::Error::InvalidReservationId(id.clone()))?;
+        id.validate()?;
         let rsvp: abi::Reservation =
             sqlx::query_as("UPDATE rsvp.reservations SET note = $1 WHERE id = $2 RETURNING *")
                 .bind(note)
@@ -61,7 +61,7 @@ impl Rsvp for ReservationManager {
 
     async fn get(&self, id: ReservationId) -> Result<abi::Reservation, abi::Error> {
         // get the reservation by id
-        let id = Uuid::parse_str(&id).map_err(|_| abi::Error::InvalidReservationId(id.clone()))?;
+        id.validate()?;
         let rsvp: abi::Reservation =
             sqlx::query_as("SELECT * FROM rsvp.reservations WHERE id = $1")
                 .bind(id)
@@ -73,7 +73,7 @@ impl Rsvp for ReservationManager {
 
     async fn delete(&self, id: ReservationId) -> Result<(), abi::Error> {
         // delete the reservation by id
-        let id = Uuid::parse_str(&id).map_err(|_| abi::Error::InvalidReservationId(id.clone()))?;
+        id.validate()?;
         sqlx::query("DELETE FROM rsvp.reservations WHERE id = $1")
             .bind(id)
             .execute(&self.pool)
@@ -134,7 +134,7 @@ mod tests {
     #[sqlx_database_tester::test(pool(variable = "migrated_pool", migrations = "../migrations"))]
     async fn reserve_should_work_for_valid_window() {
         let (rsvp, _manager) = make_tyr_reservation(migrated_pool.clone()).await;
-        assert!(!rsvp.id.is_empty());
+        assert!(rsvp.id != 0);
     }
 
     #[sqlx_database_tester::test(pool(variable = "migrated_pool", migrations = "../migrations"))]
@@ -198,15 +198,15 @@ mod tests {
     #[sqlx_database_tester::test(pool(variable = "migrated_pool", migrations = "../migrations"))]
     async fn get_reservation_should_work() {
         let (rsvp, manager) = make_alice_reservation(migrated_pool.clone()).await;
-        let rsvp1 = manager.get(rsvp.id.clone()).await.unwrap();
+        let rsvp1 = manager.get(rsvp.id).await.unwrap();
         assert_eq!(rsvp, rsvp1);
     }
 
     #[sqlx_database_tester::test(pool(variable = "migrated_pool", migrations = "../migrations"))]
     async fn delete_reservation_should_work() {
         let (rsvp, manager) = make_alice_reservation(migrated_pool.clone()).await;
-        manager.delete(rsvp.id.clone()).await.unwrap();
-        let rsvp1 = manager.get(rsvp.id.clone()).await.unwrap_err();
+        manager.delete(rsvp.id).await.unwrap();
+        let rsvp1 = manager.get(rsvp.id).await.unwrap_err();
         assert_eq!(rsvp1, abi::Error::NotFound);
     }
 

@@ -23,7 +23,7 @@ enum ReservationUpdateType {
 // if ListenResponse op is DELETE, only id will be populated
 message Reservation {
     // unique id for the reservation, if put into ReservationRequest, id should be empty
-    string id = 1;
+    int64 id = 1;
     // user id for the reservation
     string user_id = 2;
     // reservation status, used for differentating purpose

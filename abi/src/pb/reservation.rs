@@ -85,23 +85,40 @@ pub struct GetResponse {
     pub reservation: ::core::option::Option<Reservation>,
 }
 /// query reservations with user id, resource id, start time, end time, and status
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[derive(derive_builder::Builder, Clone, PartialEq, ::prost::Message)]
 pub struct ReservationQuery {
     /// resource id for the reservation query. If empty, query all resources
     #[prost(string, tag = "1")]
+    #[builder(setter(into), default)]
     pub resource_id: ::prost::alloc::string::String,
     /// user id for the reservation query. If empty, query all users
     #[prost(string, tag = "2")]
+    #[builder(setter(into), default)]
     pub user_id: ::prost::alloc::string::String,
     /// use status to filter result. If UNKNOWN, return all reservations
     #[prost(enumeration = "ReservationStatus", tag = "3")]
+    #[builder(setter(into), default)]
     pub status: i32,
     /// start time for the reservation query, if 0, use Infinity for start time
     #[prost(message, optional, tag = "4")]
+    #[builder(setter(into, strip_option))]
     pub start: ::core::option::Option<::prost_types::Timestamp>,
     /// end time for the reservation query, if 0, use Infinity for end time
     #[prost(message, optional, tag = "5")]
+    #[builder(setter(into, strip_option))]
     pub end: ::core::option::Option<::prost_types::Timestamp>,
+    /// current page for the query
+    #[prost(int32, tag = "6")]
+    #[builder(setter(into), default)]
+    pub page: i32,
+    /// page size for the query
+    #[prost(int32, tag = "7")]
+    #[builder(setter(into), default)]
+    pub page_size: i32,
+    /// sort direction
+    #[prost(bool, tag = "8")]
+    #[builder(setter(into), default)]
+    pub desc: bool,
 }
 /// To query reservations, send a QueryRequest
 #[derive(Clone, PartialEq, ::prost::Message)]

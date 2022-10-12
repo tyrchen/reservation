@@ -126,6 +126,56 @@ pub struct QueryRequest {
     #[prost(message, optional, tag = "1")]
     pub query: ::core::option::Option<ReservationQuery>,
 }
+/// query reservations, order by reservation id
+#[derive(derive_builder::Builder, Clone, PartialEq, ::prost::Message)]
+pub struct ReservationFilter {
+    /// resource id for the reservation query. If empty, query all resources
+    #[prost(string, tag = "1")]
+    #[builder(setter(into), default)]
+    pub resource_id: ::prost::alloc::string::String,
+    /// user id for the reservation query. If empty, query all users
+    #[prost(string, tag = "2")]
+    #[builder(setter(into), default)]
+    pub user_id: ::prost::alloc::string::String,
+    /// use status to filter result. If UNKNOWN, return all reservations
+    #[prost(enumeration = "ReservationStatus", tag = "3")]
+    #[builder(setter(into), default)]
+    pub status: i32,
+    #[prost(int64, tag = "4")]
+    #[builder(setter(into), default)]
+    pub cursor: i64,
+    /// page size for the query
+    #[prost(int32, tag = "5")]
+    #[builder(setter(into), default)]
+    pub page_size: i32,
+    /// sort direction
+    #[prost(bool, tag = "6")]
+    #[builder(setter(into), default)]
+    pub desc: bool,
+}
+/// To query reservations, send a QueryRequest
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct FilterRequest {
+    #[prost(message, optional, tag = "1")]
+    pub filter: ::core::option::Option<ReservationFilter>,
+}
+/// filter pager info
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct FilterPager {
+    #[prost(int64, tag = "1")]
+    pub prev: i64,
+    #[prost(int64, tag = "2")]
+    pub next: i64,
+    #[prost(int32, tag = "3")]
+    pub total: i32,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct FilterResponse {
+    #[prost(message, repeated, tag = "1")]
+    pub reservations: ::prost::alloc::vec::Vec<Reservation>,
+    #[prost(message, optional, tag = "2")]
+    pub pager: ::core::option::Option<FilterPager>,
+}
 /// Client can listen to reservation updates by sending a ListenRequest
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct ListenRequest {}
@@ -354,6 +404,22 @@ pub mod reservation_service_client {
                 .server_streaming(request.into_request(), path, codec)
                 .await
         }
+        /// filter reservations, order by reservation id
+        pub async fn filter(
+            &mut self,
+            request: impl tonic::IntoRequest<super::FilterRequest>,
+        ) -> Result<tonic::Response<super::FilterResponse>, tonic::Status> {
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path =
+                http::uri::PathAndQuery::from_static("/reservation.ReservationService/filter");
+            self.inner.unary(request.into_request(), path, codec).await
+        }
         /// another system could monitor newly added/confirmed/cancelled reservations
         pub async fn listen(
             &mut self,
@@ -416,6 +482,11 @@ pub mod reservation_service_server {
             &self,
             request: tonic::Request<super::QueryRequest>,
         ) -> Result<tonic::Response<Self::queryStream>, tonic::Status>;
+        /// filter reservations, order by reservation id
+        async fn filter(
+            &self,
+            request: tonic::Request<super::FilterRequest>,
+        ) -> Result<tonic::Response<super::FilterResponse>, tonic::Status>;
         ///Server streaming response type for the listen method.
         type listenStream: futures_core::Stream<Item = Result<super::Reservation, tonic::Status>>
             + Send
@@ -666,6 +737,37 @@ pub mod reservation_service_server {
                             send_compression_encodings,
                         );
                         let res = grpc.server_streaming(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
+                "/reservation.ReservationService/filter" => {
+                    #[allow(non_camel_case_types)]
+                    struct filterSvc<T: ReservationService>(pub Arc<T>);
+                    impl<T: ReservationService> tonic::server::UnaryService<super::FilterRequest> for filterSvc<T> {
+                        type Response = super::FilterResponse;
+                        type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<super::FilterRequest>,
+                        ) -> Self::Future {
+                            let inner = self.0.clone();
+                            let fut = async move { (*inner).filter(request).await };
+                            Box::pin(fut)
+                        }
+                    }
+                    let accept_compression_encodings = self.accept_compression_encodings;
+                    let send_compression_encodings = self.send_compression_encodings;
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let inner = inner.0;
+                        let method = filterSvc(inner);
+                        let codec = tonic::codec::ProstCodec::default();
+                        let mut grpc = tonic::server::Grpc::new(codec).apply_compression_config(
+                            accept_compression_encodings,
+                            send_compression_encodings,
+                        );
+                        let res = grpc.unary(method, req).await;
                         Ok(res)
                     };
                     Box::pin(fut)

@@ -1,0 +1,11 @@
+
+---
+db:
+  host: localhost
+  port: 5432
+  user: tchen
+  password:
+  dbname: reservation
+server:
+  host: localhost
+  port: 50051

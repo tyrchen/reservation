@@ -10,6 +10,7 @@ dependencies = [
  "derive_builder",
  "prost",
  "prost-types",
+ "proto-builder-trait",
  "regex",
  "serde",
  "serde_yaml",
@@ -1160,6 +1161,16 @@ checksum = "4dfaa718ad76a44b3415e6c4d53b17c8f99160dcb3a99b10470fce8ad43f6e3e"
 dependencies = [
  "bytes",
  "prost",
+]
+
+[[package]]
+name = "proto-builder-trait"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b11a7a15961d0400c196960a09068a854f03cdd3d33e7c6d8957300df4270d16"
+dependencies = [
+ "prost-build",
+ "tonic-build",
 ]
 
 [[package]]

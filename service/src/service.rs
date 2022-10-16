@@ -151,43 +151,12 @@ impl<T> Stream for TonicReceiverStream<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::test_utils::TestConfig;
     use abi::Reservation;
-    use sqlx_db_tester::TestDb;
-    use std::ops::Deref;
-
-    struct TestConfig {
-        #[allow(dead_code)]
-        tdb: TestDb,
-        pub config: Config,
-    }
-
-    impl Deref for TestConfig {
-        type Target = Config;
-
-        fn deref(&self) -> &Self::Target {
-            &self.config
-        }
-    }
-
-    impl TestConfig {
-        pub fn new() -> Self {
-            let mut config = Config::load("fixtures/config.yml").unwrap();
-            let tdb = TestDb::new(
-                &config.db.host,
-                config.db.port,
-                &config.db.user,
-                &config.db.password,
-                "../migrations",
-            );
-
-            config.db.dbname = tdb.dbname.clone();
-            Self { tdb, config }
-        }
-    }
 
     #[tokio::test]
     async fn rpc_reserve_should_work() {
-        let config = TestConfig::new();
+        let config = TestConfig::default();
 
         let service = RsvpService::from_config(&config).await.unwrap();
         let reservation = Reservation::new_pending(

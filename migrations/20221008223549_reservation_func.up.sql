@@ -9,7 +9,7 @@ CREATE OR REPLACE FUNCTION rsvp.query(
     status rsvp.reservation_status,
     page integer DEFAULT 1,
     is_desc bool DEFAULT FALSE,
-    page_size integer DEFAULT 10
+    page_size bigint DEFAULT 10
 ) RETURNS TABLE (LIKE rsvp.reservations) AS $$
 DECLARE
     _sql text;
@@ -60,7 +60,7 @@ CREATE OR REPLACE FUNCTION rsvp.filter(
     status rsvp.reservation_status,
     cursor bigint DEFAULT NULL,
     is_desc bool DEFAULT FALSE,
-    page_size integer DEFAULT 10
+    page_size bigint DEFAULT 10
 ) RETURNS TABLE (LIKE rsvp.reservations) AS $$
 DECLARE
     _sql text;

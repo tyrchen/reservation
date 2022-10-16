@@ -67,7 +67,7 @@ mod tests {
                     host: "localhost".to_string(),
                     port: 5432,
                     user: "postgres".to_string(),
-                    password: "".to_string(),
+                    password: "postgres".to_string(),
                     dbname: "reservation".to_string(),
                     max_connections: 5,
                 },

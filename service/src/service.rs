@@ -87,11 +87,10 @@ impl ReservationService for RsvpService {
 
 #[cfg(test)]
 mod tests {
-    use std::ops::Deref;
-
     use super::*;
     use abi::Reservation;
     use sqlx_db_tester::TestDb;
+    use std::ops::Deref;
 
     struct TestConfig {
         #[allow(dead_code)]

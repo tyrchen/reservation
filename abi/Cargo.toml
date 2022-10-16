@@ -16,6 +16,7 @@ serde_yaml = "0.9.13"
 sqlx = { version = "0.6.2", features = ["runtime-tokio-rustls", "postgres", "chrono", "uuid"] }
 thiserror = "1.0.37"
 tonic = { version = "0.8.2", features = ["gzip"] }
+tracing = "0.1.37"
 
 [build-dependencies]
 tonic-build = "0.8.2"

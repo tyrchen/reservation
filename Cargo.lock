@@ -1267,13 +1267,13 @@ dependencies = [
  "abi",
  "anyhow",
  "futures",
- "lazy_static",
  "rand",
  "reservation",
  "serde",
  "serde_yaml",
  "shellexpand",
  "sqlx",
+ "sqlx-db-tester",
  "tokio",
  "tonic",
 ]
@@ -1555,6 +1555,17 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "sqlx-db-tester"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "efa71d5eb6b73e102149a786744857316e0d06217225a50a8b5bc7dae77e54cc"
+dependencies = [
+ "sqlx",
+ "tokio",
+ "uuid",
 ]
 
 [[package]]
@@ -1989,9 +2000,9 @@ dependencies = [
 
 [[package]]
 name = "uuid"
-version = "1.2.0"
+version = "1.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "683f0a095f6dcf74520a5f17a12452ae6f970abbd2443299a1e226fd38195f2b"
+checksum = "feb41e78f93363bb2df8b0e86a2ca30eed7806ea16ea0c790d757cf93f79be83"
 dependencies = [
  "getrandom",
 ]

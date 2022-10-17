@@ -121,7 +121,9 @@ pub struct QueryRequest {
     pub query: ::core::option::Option<ReservationQuery>,
 }
 /// query reservations, order by reservation id
-#[derive(derive_builder::Builder, Clone, PartialEq, ::prost::Message)]
+#[derive(derive_builder::Builder)]
+#[builder(build_fn(name = "private_build"))]
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct ReservationFilter {
     /// resource id for the reservation query. If empty, query all resources
     #[prost(string, tag = "1")]
@@ -135,9 +137,9 @@ pub struct ReservationFilter {
     #[prost(enumeration = "ReservationStatus", tag = "3")]
     #[builder(setter(into), default)]
     pub status: i32,
-    #[prost(int64, tag = "4")]
-    #[builder(setter(into), default)]
-    pub cursor: i64,
+    #[prost(int64, optional, tag = "4")]
+    #[builder(setter(into, strip_option), default)]
+    pub cursor: ::core::option::Option<i64>,
     /// page size for the query
     #[prost(int64, tag = "5")]
     #[builder(setter(into), default = "10")]
@@ -156,12 +158,12 @@ pub struct FilterRequest {
 /// filter pager info
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct FilterPager {
-    #[prost(int64, tag = "1")]
-    pub prev: i64,
-    #[prost(int64, tag = "2")]
-    pub next: i64,
-    #[prost(int64, tag = "3")]
-    pub total: i64,
+    #[prost(int64, optional, tag = "1")]
+    pub prev: ::core::option::Option<i64>,
+    #[prost(int64, optional, tag = "2")]
+    pub next: ::core::option::Option<i64>,
+    #[prost(int64, optional, tag = "3")]
+    pub total: ::core::option::Option<i64>,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct FilterResponse {

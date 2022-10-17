@@ -1,7 +1,6 @@
-use std::{ops::Deref, path::Path};
-
 use abi::Config;
 use sqlx_db_tester::TestDb;
+use std::{ops::Deref, path::Path};
 
 pub struct TestConfig {
     #[allow(dead_code)]
@@ -18,7 +17,6 @@ impl Deref for TestConfig {
 }
 
 impl TestConfig {
-    #[allow(dead_code)]
     pub fn new(filename: impl AsRef<Path>) -> Self {
         let mut config = Config::load(filename).unwrap();
         let tdb = TestDb::new(
@@ -31,6 +29,12 @@ impl TestConfig {
 
         config.db.dbname = tdb.dbname.clone();
         Self { tdb, config }
+    }
+
+    pub fn with_server_port(port: u16) -> Self {
+        let mut config = TestConfig::default();
+        config.config.server.port = port;
+        config
     }
 }
 

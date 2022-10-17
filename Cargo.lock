@@ -1281,6 +1281,7 @@ dependencies = [
  "abi",
  "anyhow",
  "futures",
+ "lazy_static",
  "rand",
  "reservation",
  "serde",

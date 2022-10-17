@@ -1,6 +1,6 @@
 use crate::{
-    CancelRequest, ConfirmRequest, FilterRequest, GetRequest, Reservation, ReservationFilter,
-    ReserveRequest, UpdateRequest,
+    CancelRequest, ConfirmRequest, FilterRequest, GetRequest, QueryRequest, Reservation,
+    ReservationFilter, ReservationQuery, ReserveRequest, UpdateRequest,
 };
 
 macro_rules! impl_new {
@@ -24,6 +24,7 @@ macro_rules! impl_new {
 
 impl_new!(ReserveRequest, reservation, Reservation);
 impl_new!(FilterRequest, filter, ReservationFilter);
+impl_new!(QueryRequest, query, ReservationQuery);
 impl_new!(ConfirmRequest);
 impl_new!(GetRequest);
 impl_new!(CancelRequest);

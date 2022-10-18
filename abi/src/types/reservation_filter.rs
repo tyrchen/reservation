@@ -1,8 +1,9 @@
 use std::collections::VecDeque;
 
 use crate::{
-    Error, FilterPager, Normalizer, Reservation, ReservationFilter, ReservationFilterBuilder,
-    ReservationStatus, ToSql, Validator,
+    pager::{Id, PageInfo, Pager, Paginator},
+    Error, FilterPager, Normalizer, ReservationFilter, ReservationFilterBuilder, ReservationStatus,
+    ToSql, Validator,
 };
 
 impl ReservationFilterBuilder {
@@ -41,23 +42,31 @@ impl Normalizer for ReservationFilter {
     }
 }
 
+impl From<Pager> for FilterPager {
+    fn from(pager: Pager) -> Self {
+        Self {
+            prev: pager.prev,
+            next: pager.next,
+            total: pager.total,
+        }
+    }
+}
+
+impl From<&FilterPager> for Pager {
+    fn from(pager: &FilterPager) -> Self {
+        Self {
+            prev: pager.prev,
+            next: pager.next,
+            total: pager.total,
+        }
+    }
+}
+
 impl ReservationFilter {
-    pub fn get_pager(&self, data: &mut VecDeque<Reservation>) -> Result<FilterPager, Error> {
-        let has_prev = self.cursor.is_some();
-        let start = if has_prev { data.pop_front() } else { None };
-
-        let has_next = data.len() as i64 > self.page_size;
-        let end = if has_next { data.pop_back() } else { None };
-
-        let pager = FilterPager {
-            prev: start.map(|r| r.id),
-            next: end.map(|r| r.id),
-
-            // TODO: how to get total efficiently?
-            total: None,
-        };
-
-        Ok(pager)
+    pub fn get_pager<T: Id>(&self, data: &mut VecDeque<T>) -> FilterPager {
+        let page_info = self.page_info();
+        let pager = page_info.get_pager(data);
+        pager.into()
     }
 
     pub fn get_cursor(&self) -> i64 {
@@ -66,6 +75,28 @@ impl ReservationFilter {
 
     pub fn get_status(&self) -> ReservationStatus {
         ReservationStatus::from_i32(self.status).unwrap()
+    }
+
+    pub fn next_page(&self, pager: &FilterPager) -> Option<Self> {
+        let page_info = self.page_info();
+        let pager = pager.into();
+        let page_info = page_info.next_page(&pager);
+        page_info.map(|page_info| Self {
+            cursor: page_info.cursor,
+            page_size: page_info.page_size,
+            desc: page_info.desc,
+            status: self.status,
+            resource_id: self.resource_id.clone(),
+            user_id: self.user_id.clone(),
+        })
+    }
+
+    fn page_info(&self) -> PageInfo {
+        PageInfo {
+            cursor: self.cursor,
+            page_size: self.page_size,
+            desc: self.desc,
+        }
     }
 }
 
@@ -107,7 +138,10 @@ impl ToSql for ReservationFilter {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ReservationFilterBuilder;
+    use crate::{pager::pager_test_utils::generate_test_ids, ReservationFilterBuilder};
+
+    #[test]
+    fn filter_should_generate_correct_pager() {}
 
     #[test]
     fn filter_should_generate_correct_sql() {
@@ -168,5 +202,29 @@ mod tests {
             sql,
             "SELECT * FROM rsvp.reservations WHERE status = 'pending'::rsvp.reservation_status AND id <= 10 AND user_id = 'tyr' ORDER BY id DESC LIMIT 12"
         );
+    }
+
+    #[test]
+    fn filter_with_pager_should_generate_correct_sql() {
+        let filter = ReservationFilterBuilder::default()
+            .resource_id("router-1")
+            .build()
+            .unwrap();
+        let mut data = generate_test_ids(1, 11);
+        let pager = filter.get_pager(&mut data);
+        assert_eq!(pager.prev, None);
+        assert_eq!(pager.next, Some(10));
+
+        let filter = filter.next_page(&pager).unwrap();
+        let sql = filter.to_sql().unwrap();
+        assert_eq!(
+            sql,
+            "SELECT * FROM rsvp.reservations WHERE status = 'pending'::rsvp.reservation_status AND id >= 10 AND resource_id = 'router-1' ORDER BY id ASC LIMIT 12"
+        );
+
+        let mut data = generate_test_ids(10, 20);
+        let pager = filter.get_pager(&mut data);
+        assert_eq!(pager.prev, Some(11));
+        assert_eq!(pager.next, None);
     }
 }

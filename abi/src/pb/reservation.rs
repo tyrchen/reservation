@@ -87,7 +87,9 @@ pub struct GetResponse {
     pub reservation: ::core::option::Option<Reservation>,
 }
 /// query reservations with user id, resource id, start time, end time, and status
-#[derive(derive_builder::Builder, Clone, PartialEq, ::prost::Message)]
+#[derive(derive_builder::Builder)]
+#[builder(build_fn(name = "private_build"))]
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct ReservationQuery {
     /// resource id for the reservation query. If empty, query all resources
     #[prost(string, tag = "1")]

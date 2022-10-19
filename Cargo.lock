@@ -85,9 +85,9 @@ dependencies = [
 
 [[package]]
 name = "async-trait"
-version = "0.1.57"
+version = "0.1.58"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "76464446b8bc32758d7e88ee1a804d9914cd9b1cb264c029899680b0be29826f"
+checksum = "1e805d94e6b5001b651426cf4cd446b1ab5f319d27bab5c644f61de0a804360c"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -439,12 +439,6 @@ dependencies = [
  "redox_users",
  "winapi",
 ]
-
-[[package]]
-name = "dotenv"
-version = "0.15.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "77c90badedccf4105eca100756a0b1289e191f6fcbdadd3cee1d2f614f97da8f"
 
 [[package]]
 name = "dotenvy"
@@ -1268,7 +1262,7 @@ dependencies = [
  "futures",
  "prost-types",
  "sqlx",
- "sqlx-database-tester",
+ "sqlx-db-tester",
  "thiserror",
  "tokio",
  "tracing",
@@ -1550,34 +1544,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "sqlx-database-tester"
-version = "0.4.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cb1c6f490fef665b0fa8babd51592ffc560b236c1ba3f22d4a7f80584c03d2aa"
-dependencies = [
- "dotenv",
- "sqlx",
- "sqlx-database-tester-macros",
- "uuid",
-]
-
-[[package]]
-name = "sqlx-database-tester-macros"
-version = "0.4.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b5ff198cbe87fc27559f2e10b1402b292c5ad27c3289850428d54be1377dace8"
-dependencies = [
- "darling",
- "proc-macro2",
- "quote",
- "syn",
-]
-
-[[package]]
 name = "sqlx-db-tester"
-version = "0.1.0"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "efa71d5eb6b73e102149a786744857316e0d06217225a50a8b5bc7dae77e54cc"
+checksum = "e5b4b49682a8a2ddf4d574b2d06add6e68b81d34c07a31529aa87c7b58b028e5"
 dependencies = [
  "sqlx",
  "tokio",

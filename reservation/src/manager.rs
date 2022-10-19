@@ -1,7 +1,5 @@
 use crate::{ReservationManager, Rsvp};
-use abi::{
-    convert_to_utc_time, DbConfig, FilterPager, Normalizer, ReservationId, ToSql, Validator,
-};
+use abi::{DbConfig, FilterPager, Normalizer, ReservationId, ToSql, Validator};
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use futures::StreamExt;
@@ -94,27 +92,12 @@ impl Rsvp for ReservationManager {
         &self,
         query: abi::ReservationQuery,
     ) -> mpsc::Receiver<Result<abi::Reservation, abi::Error>> {
-        let user_id = string_to_option(&query.user_id);
-        let resource_id = string_to_option(&query.resource_id);
-        let start = query.start.map(convert_to_utc_time);
-        let end = query.end.map(convert_to_utc_time);
-        let status = abi::ReservationStatus::from_i32(query.status)
-            .unwrap_or(abi::ReservationStatus::Pending);
-
         let pool = self.pool.clone();
         let (tx, rx) = mpsc::channel(128);
 
         tokio::spawn(async move {
-            let mut rsvps = sqlx::query_as(
-                "SELECT * FROM rsvp.query($1, $2, $3, $4, $5::rsvp.reservation_status, $6)",
-            )
-            .bind(user_id)
-            .bind(resource_id)
-            .bind(start)
-            .bind(end)
-            .bind(status.to_string())
-            .bind(query.desc)
-            .fetch_many(&pool);
+            let sql = query.to_sql();
+            let mut rsvps = sqlx::query_as(&sql).fetch_many(&pool);
             while let Some(ret) = rsvps.next().await {
                 match ret {
                     Ok(Either::Left(r)) => {
@@ -146,7 +129,7 @@ impl Rsvp for ReservationManager {
     ) -> Result<(FilterPager, Vec<abi::Reservation>), abi::Error> {
         filter.normalize()?;
 
-        let sql = filter.to_sql()?;
+        let sql = filter.to_sql();
 
         let rsvps: Vec<abi::Reservation> = sqlx::query_as(&sql).fetch_all(&self.pool).await?;
         let mut rsvps = rsvps.into_iter().collect();
@@ -171,33 +154,29 @@ impl ReservationManager {
     }
 }
 
-fn string_to_option(s: &str) -> Option<String> {
-    if s.is_empty() {
-        None
-    } else {
-        Some(s.into())
-    }
-}
-
 #[cfg(test)]
 mod tests {
+    use super::*;
     use abi::{
         Reservation, ReservationConflict, ReservationConflictInfo, ReservationFilterBuilder,
         ReservationQueryBuilder, ReservationWindow,
     };
     use prost_types::Timestamp;
+    use sqlx_db_tester::TestDb;
 
-    use super::*;
-
-    #[sqlx_database_tester::test(pool(variable = "migrated_pool", migrations = "../migrations"))]
+    #[tokio::test]
     async fn reserve_should_work_for_valid_window() {
-        let (rsvp, _manager) = make_tyr_reservation(migrated_pool.clone()).await;
+        let tdb = get_tdb();
+        let pool = tdb.get_pool().await;
+        let (rsvp, _manager) = make_tyr_reservation(pool).await;
         assert!(rsvp.id != 0);
     }
 
-    #[sqlx_database_tester::test(pool(variable = "migrated_pool", migrations = "../migrations"))]
+    #[tokio::test]
     async fn reserve_conflict_reservation_should_reject() {
-        let (_rsvp1, manager) = make_tyr_reservation(migrated_pool.clone()).await;
+        let tdb = get_tdb();
+        let pool = tdb.get_pool().await;
+        let (_rsvp1, manager) = make_tyr_reservation(pool).await;
         let rsvp2 = abi::Reservation::new_pending(
             "aliceid",
             "ocean-view-room-713",
@@ -224,17 +203,21 @@ mod tests {
         assert_eq!(err, abi::Error::ConflictReservation(info));
     }
 
-    #[sqlx_database_tester::test(pool(variable = "migrated_pool", migrations = "../migrations"))]
+    #[tokio::test]
     async fn reserve_change_status_should_work() {
-        let (rsvp, manager) = make_alice_reservation(migrated_pool.clone()).await;
+        let tdb = get_tdb();
+        let pool = tdb.get_pool().await;
+        let (rsvp, manager) = make_alice_reservation(pool).await;
 
         let rsvp = manager.change_status(rsvp.id).await.unwrap();
         assert_eq!(rsvp.status, abi::ReservationStatus::Confirmed as i32);
     }
 
-    #[sqlx_database_tester::test(pool(variable = "migrated_pool", migrations = "../migrations"))]
+    #[tokio::test]
     async fn reserve_change_status_not_pending_should_do_nothging() {
-        let (rsvp, manager) = make_alice_reservation(migrated_pool.clone()).await;
+        let tdb = get_tdb();
+        let pool = tdb.get_pool().await;
+        let (rsvp, manager) = make_alice_reservation(pool).await;
 
         let rsvp = manager.change_status(rsvp.id).await.unwrap();
 
@@ -243,9 +226,11 @@ mod tests {
         assert_eq!(ret, abi::Error::NotFound);
     }
 
-    #[sqlx_database_tester::test(pool(variable = "migrated_pool", migrations = "../migrations"))]
+    #[tokio::test]
     async fn update_note_should_work() {
-        let (rsvp, manager) = make_alice_reservation(migrated_pool.clone()).await;
+        let tdb = get_tdb();
+        let pool = tdb.get_pool().await;
+        let (rsvp, manager) = make_alice_reservation(pool).await;
         let rsvp = manager
             .update_note(rsvp.id, "hello world".into())
             .await
@@ -253,24 +238,30 @@ mod tests {
         assert_eq!(rsvp.note, "hello world");
     }
 
-    #[sqlx_database_tester::test(pool(variable = "migrated_pool", migrations = "../migrations"))]
+    #[tokio::test]
     async fn get_reservation_should_work() {
-        let (rsvp, manager) = make_alice_reservation(migrated_pool.clone()).await;
+        let tdb = get_tdb();
+        let pool = tdb.get_pool().await;
+        let (rsvp, manager) = make_alice_reservation(pool).await;
         let rsvp1 = manager.get(rsvp.id).await.unwrap();
         assert_eq!(rsvp, rsvp1);
     }
 
-    #[sqlx_database_tester::test(pool(variable = "migrated_pool", migrations = "../migrations"))]
+    #[tokio::test]
     async fn delete_reservation_should_work() {
-        let (rsvp, manager) = make_alice_reservation(migrated_pool.clone()).await;
+        let tdb = get_tdb();
+        let pool = tdb.get_pool().await;
+        let (rsvp, manager) = make_alice_reservation(pool).await;
         manager.delete(rsvp.id).await.unwrap();
         let rsvp1 = manager.get(rsvp.id).await.unwrap_err();
         assert_eq!(rsvp1, abi::Error::NotFound);
     }
 
-    #[sqlx_database_tester::test(pool(variable = "migrated_pool", migrations = "../migrations"))]
+    #[tokio::test]
     async fn query_reservations_should_work() {
-        let (rsvp, manager) = make_alice_reservation(migrated_pool.clone()).await;
+        let tdb = get_tdb();
+        let pool = tdb.get_pool().await;
+        let (rsvp, manager) = make_alice_reservation(pool).await;
         let query = ReservationQueryBuilder::default()
             .user_id("aliceid")
             .start("2021-11-01T15:00:00-0700".parse::<Timestamp>().unwrap())
@@ -311,9 +302,11 @@ mod tests {
         assert_eq!(rx.recv().await, Some(Ok(rsvp)));
     }
 
-    #[sqlx_database_tester::test(pool(variable = "migrated_pool", migrations = "../migrations"))]
+    #[tokio::test]
     async fn filter_reservations_should_work() {
-        let (rsvp, manager) = make_alice_reservation(migrated_pool.clone()).await;
+        let tdb = get_tdb();
+        let pool = tdb.get_pool().await;
+        let (rsvp, manager) = make_alice_reservation(pool).await;
         let filter = ReservationFilterBuilder::default()
             .user_id("aliceid")
             .status(abi::ReservationStatus::Pending as i32)
@@ -328,6 +321,10 @@ mod tests {
     }
 
     // private none test functions
+    fn get_tdb() -> TestDb {
+        TestDb::new("localhost", 5432, "postgres", "postgres", "../migrations")
+    }
+
     async fn make_tyr_reservation(pool: PgPool) -> (Reservation, ReservationManager) {
         make_reservation(
             pool,

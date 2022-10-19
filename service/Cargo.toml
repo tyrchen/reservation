@@ -25,4 +25,4 @@ tracing = "0.1.37"
 lazy_static = "1.4.0"
 rand = "0.8.5"
 sqlx = { version = "0.6.2", features = ["runtime-tokio-rustls", "postgres", "chrono", "uuid"] }
-sqlx-db-tester = "0.1.0"
+sqlx-db-tester = "0.1.1"

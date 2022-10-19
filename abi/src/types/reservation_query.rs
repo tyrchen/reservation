@@ -44,7 +44,7 @@ impl Normalizer for ReservationQuery {
 
 impl ToSql for ReservationQuery {
     fn to_sql(&self) -> String {
-        let status = ReservationStatus::from_i32(self.status).unwrap_or(ReservationStatus::Pending);
+        let status = self.get_status();
 
         let timespan = format!(
             "tstzrange('{}', '{}')",

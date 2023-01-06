@@ -17,7 +17,7 @@ reservation = { version = "0.1.0", path = "../reservation" }
 serde = { version = "1.0.147", features = ["derive"] }
 serde_yaml = "0.9.14"
 shellexpand = "2.1.2"
-tokio = { version = "1.21.2", features = ["full"] }
+tokio = { version = "1.23.1", features = ["full"] }
 tonic = { version = "0.8.2", features = ["tokio-rustls", "gzip"] }
 tracing = "0.1.37"
 
